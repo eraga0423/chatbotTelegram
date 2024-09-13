@@ -22,7 +22,12 @@ func main() {
 	for update := range updates {
 		if update.Message != nil {
 			chatID := tu.ID(update.Message.Chat.ID)
-
+			keyboard := tu.Keyboard(
+				tu.KeyboardRow(
+					tu.KeyboardButton("БАТЫРМА"),
+				),
+			)
+		().WithReplyMarkup(keyboard)
 			_, _ = bot.CopyMessage(
 				tu.CopyMessage(
 					chatID,
