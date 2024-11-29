@@ -2,40 +2,260 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"log/slog"
+	"math/rand/v2"
+	"net"
+	"net/url"
 	"os"
+	"time"
 
+	gpt "github.com/8ff/gpt/pkg/gpt_3_5_turbo"
 	"github.com/mymmrac/telego"
-	tu "github.com/mymmrac/telego/telegoutil"
+	"github.com/mymmrac/telego/telegoutil"
 )
 
 func main() {
 	botToken := "7261966141:AAGw7-WCqfMpHpkXZEgDNBGvX-bjN7JdpcI"
-	bot, err := telego.NewBot(botToken, telego.WithDefaultLogger())
+	bot, err := telego.NewBot(botToken, telego.WithDefaultDebugLogger())
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	updates, _ := bot.UpdatesViaLongPollin(nil)
-
+	updates, _ := bot.UpdatesViaLongPolling(nil)
 	defer bot.StopLongPolling()
-
+	answer1 := BoringMessage()
+	idChatClestation := int64(-1002396731326)
+	reply1 := telegoutil.Message(idChatClestation, answer1)
+	bot.SendMessage(reply1)
 	for update := range updates {
-		if update.Message != nil {
-			chatID := tu.ID(update.Message.Chat.ID)
-			keyboard := tu.Keyboard(
-				tu.KeyboardRow(
-					tu.KeyboardButton("БАТЫРМА"),
-				),
-			)
-		().WithReplyMarkup(keyboard)
-			_, _ = bot.CopyMessage(
-				tu.CopyMessage(
-					chatID,
-					chatID,
-					update.Message.MessageID,
-				),
-			)
+		if update.Message != nil && update.Message.Text != "" {
+			question := update.Message.Text
+			// answer := Chatgpt(question)
+			// answer := ChatGemini(question)
+			fmt.Println(question, "aaaaaaaaaaaaaaaaaa")
+			// "немене тисе бересңндер"
+			// test := TestGeminiConnection()
+			answer := RandomResponse()
+
+			reply := telegoutil.Message(update.Message.Chat.ChatID(), answer)
+
+			bot.SendMessage(reply)
 
 		}
+	}
+}
+
+var TokenGPT = "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"
+
+func Chatgpt8ff(question string) string {
+	api, err := gpt.Init(gpt.Params{
+		API_TOKEN:    TokenGPT,
+		StripNewline: true,
+		Request: gpt.ChatRequest{
+			Model: "gpt-3.5-turbo",
+		},
+	},
+	)
+	if err != nil {
+		slog.Error("Error GPT")
+		return "error gpt"
+	}
+	choices, err := api.Query(question)
+	if err != nil {
+		slog.Error("ERROR QUERy")
+		return fmt.Sprintf("error query my question : %s", question)
+	}
+	result := ""
+	for _, choice := range choices {
+		result = choice.Message.Content
+	}
+	return result
+}
+
+func ChatGemini(questions string) string {
+	res := "empty"
+	conn, err := net.Dial("tcp", "gemini.circumlunar.space:1965")
+	if err != nil {
+		return "error connect gemini"
+	}
+	defer conn.Close()
+	encodedQuestion := url.QueryEscape(questions)
+	url := fmt.Sprintf("gemini://gemini.circumlunar.space/ask?question=%s\r\n", encodedQuestion)
+
+	// _, err = fmt.Fprint(conn, url)
+	_, err = conn.Write([]byte(url))
+	if err != nil {
+		return "error respons"
+	}
+	res1, err := io.ReadAll(conn)
+	if err != nil {
+		return "read all error"
+	}
+	res = string(res1)
+	return res
+}
+func TestGeminiConnection() string {
+	conn, err := net.Dial("tcp", "gemini.circumlunar.space:1965")
+	if err != nil {
+		return "Ошибка подключения к серверу Gemini"
+	}
+	defer conn.Close()
+	return "Соединение с сервером Gemini успешно установлено!"
+}
+
+func RandomResponse() string {
+	answers := []string{
+		"Жақсы, рақмет.",
+		"Өзім білемін.",
+		"Білмеймін.",
+		"Маған бәрібір.",
+		"Иә.",
+		"Жоқ.",
+		"Қызық екен.",
+		"Болып қалар.",
+		"Жарайды.",
+		"Көрерміз.",
+		"Ойланамын.",
+		"Қолымнан келеді.",
+		"Қолым тимей жатыр.",
+		"Кейінірек сөйлесеміз.",
+		"Қазір айта алмаймын.",
+		"Мүмкін.",
+		"Маған ұнайды.",
+		"Менің ойымша, жақсы.",
+		"Оған сенімді емеспін.",
+		"Айта берсін.",
+		"Өмірде бәрі болады, бауырым.",
+		"Бәрі жоспар бойынша.",
+		"Ешкімге айтпа.",
+		"Не істеп жатырмын, түсінбедім.",
+		"Мәссаған, мощный!",
+		"Не болды? Қорқып кеттің бе?",
+		"Өтірік айтпа!",
+		"Келесі сұрақ.",
+		"Майлы жілік кімге бұйырады екен?",
+		"Ойбай, өмірді қиындатпа.",
+		"И, бәрі солай.",
+		"Күте тұрыңыз, ойланайын.",
+		"Өтпейді, братан.",
+		"Саған ешкім сенбей жатыр.",
+		"Жасай береміз, брат!",
+		"Бәрін білемін деп айтпа.",
+		"Жауап беремін, бірақ ертең.",
+		"Айтарым жоқ.",
+		"Тыныштық, халықтың пікірі керек.",
+		"Байыппен сөйлесіңіз.",
+		"Ертең таңғы жетіде көреміз.",
+		"Сен де қызықсың!",
+		"Ойланатын нәрсе емес.",
+		"Мен саған айттым ғой.",
+		"Тоқта, ана жақта бірнәрсе дұрыс емес.",
+		"Қуып кеткен жоқсың ба?",
+		"Қызық екен, тағы да айтшы.",
+		"Көршінің баласы сияқты бол.",
+		"Жарайды, бұл енді соңғысы.",
+		"Ақшасы жоқ, бірақ идеясы бар.",
+		"Көш жүре түзеледі.",
+		"'I am joking', we say 'Дее'.",
+		" 'Let’s help people in need', we say 'Давайте устроим фейерверк'.",
+		" 'after party', we say 'өзіміз отырып шай ішейік'.",
+		" 'Bullshit', we say 'Каспиға лақтыра сал'.",
+		" 'Go to sleep', we say 'Жат бар'.",
+		" 'I don’t care', we say 'Маған бәрібір'.",
+		" 'I am busy', we say 'Қолым тимей жатыр'.",
+		" 'Maybe', we say 'Мүмкін'.",
+		" 'I like it', we say 'Маған ұнайды'.",
+		" 'I am not sure', we say 'Оған сенімді емеспін'.",
+		"Ой, әйтеуір тірі жүрмін!",
+		"Білмеймін, басымды қатыра бермеш.",
+		"Кредит төлеу керек, басқа ештеңе ойлап тұрған жоқпын.",
+		"Қазір емес, шәй ішіп алайын.",
+		"Жақсы сұрақ, бірақ жауап жоқ.",
+		"Қайдан білейін, мен программист емеспін ғой.",
+		"Иә, бірақ жоқ.",
+		"Көрші ауылдың өсегі сияқты бұл.",
+		"Қазақ болған соң үндемей қаламын.",
+		"Оны Google-дан сұра.",
+		"Мен білсем, осы жерде отырмайтын едім.",
+		"Той болса, шақырмайсың ғой.",
+		"Қазір тек шәй мен бауырсақ туралы ойлап тұрмын.",
+		"Көп сөйлеме, 5 минутта шешейік.",
+		"Сендерсіз-ақ өмір сүріп жүрміз.",
+		"Ертең жиналыста айтамыз.",
+		"Маған бәрібір, тек ет болса болды.",
+		"Мә, жартысын жей салшы.",
+		"Кредит сұрағалы тұрсың ба?",
+		"Бірден 'жоқ' деп жауап берейін.",
+		"Түскі үзілісте талқылайық.",
+		"Жарайды, жаман емес.",
+		"Әпше, шәй құясыз ба?",
+		"Жоқ, басқа жұмыс жоқ.",
+		"Е, не істеп жатырсың? Менікі дұрыс емес пе?",
+		"Қазақ болсаң, түсінерсің.",
+		"Асықпа, қазақтар ешқашан кешікпейді.",
+		"Бүгін жұма, ал сен жұмыс туралы айтып тұрсың.",
+		"Сендер көп күлесіңдер, мен жай ғана өмір сүріп жатырмын.",
+		"Қымыз бар ма?",
+		"Менің миым бүгін демалыста.",
+		"Қазір болмайды, шәй дайындалып жатыр.",
+		"Өмірде бәрі болады, бірақ етсіз болмайды.",
+		"Не болды, қалың мал сұрағалы тұрсың ба?",
+		"Әпше, тамақ дайын ба?",
+		"Жоқ, тамақ ішіп отырмын.",
+		"Оны шешу үшін 5 жыл оқу керек.",
+		"Келін болу оңай емес.",
+		"Шәй ішсең бәрі оңай шешіледі.",
+		"Қазақ болған соң, етсіз той жоқ.",
+		"Түстен кейін сөйлесейік, таңғы шәй ішпедім.",
+		"Айтпасаң да білініп тұр.",
+		"Тойға барамыз ба, жоқ па?",
+		"Жол жабық деп айта сал.",
+	}
+
+	res := rand.IntN(len(answers) - 1)
+	return answers[res]
+}
+
+func BoringMessage() string {
+	for {
+		// now := time.Now()
+		// nextRun := time.Date(now.Year(), now.Month(), now.Day(), 13, 0, 0, 0, now.Location())
+		// if now.After(nextRun) {
+		// 	nextRun = nextRun.Add(24 * time.Hour)
+		// }
+		// duration := time.Until(nextRun)
+		time.Sleep(time.Minute * 2)
+		openingLines := []string{
+			// Абсурдный юмор
+			"Сәлем! Саған неше жұлдыз керек? Менің жұлдызнамам дұрыс емес сияқты.",
+			"Мені көріп таң қалма, мен әлі жұмыс істеймін.",
+			"Бүгін таңғы 4-те тұрдым, өйткені өмір маған тыныштық бермейді.",
+			"Сәлем! Мен өзімді табуға шықтым, бірақ, өкінішке орай, сені таптым.",
+			"Бүгін жақсы жаңалық бар: мен кофе ішіп үлгердім. Ал сен ше?",
+
+			// Легкий сарказм
+			"Сәлем! Неге бүгін бәрі соншалықты таңертеңнен басталды?",
+			"Бізде бәрі жақсы, бірақ ештеңе дұрыс емес. Ал сенде қалай?",
+			"Егер сен менің сұрақтарыма жауап бермесең, бұл ұзақ әңгіме болады.",
+			"Мен бүгін ештеңе жоспарламадым, сондықтан сенің жоспарыңды бұзып көремін.",
+			"Мен сенің жаныңда ақылды болып көрінгім келіп тұр. Қарсы емессің бе?",
+
+			// Черный юмор
+			"Сәлем! Егер менің қалжыңдарым ауыр болса, бұл жай ғана менің өмірлік тәжірибем.",
+			"Мен бұл өмірді жеңіп аламын деп ойлаймын, бірақ, шын айтсам, ол мені жеңіп жатыр.",
+			"Көңіліңді түсірме, менің өмірім бұдан да күлкілі.",
+			"Қайырлы күн! Менің басты мақсатым – бұл әңгімеде аман қалу.",
+			"Егер сенің өміріңде бәрі жақсы болса, сәл сабыр ет. Бұл уақытша.",
+
+			// Легкий позитивный юмор
+			"Сәлем! Сенің күлімсіреуің бүгінге жеткілікті күн сәулесі береді.",
+			"Мен сенің қалайсың деп сұрағым келіп еді, бірақ мен алдымен кофемді аяқтаймын.",
+			"Бүгін сенен жақсы жаңалық естігім келеді. Болмаса, өзімді ойлап табамын.",
+			"Егер сен осы әңгімені бастағың келсе, мен дайынмын!",
+			"Сәлем! Бүгін бәрі оңай болады деп сенейік. Болмаса, мен қашамын.",
+		}
+		index := rand.IntN(len(openingLines) - 1)
+		return openingLines[index]
 	}
 }
