@@ -36,6 +36,7 @@ func main() {
 			fmt.Println(question, "aaaaaaaaaaaaaaaaaa")
 			// "немене тисе бересңндер"
 			// test := TestGeminiConnection()
+
 			answer := RandomResponse()
 
 			reply := telegoutil.Message(update.Message.Chat.ChatID(), answer)
