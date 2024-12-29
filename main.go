@@ -1,8 +1,11 @@
 package main
 
 import (
+	"chatbot/models"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"log/slog"
 	"math/rand/v2"
 	"net"
@@ -12,39 +15,48 @@ import (
 
 	gpt "github.com/8ff/gpt/pkg/gpt_3_5_turbo"
 	"github.com/mymmrac/telego"
-	"github.com/mymmrac/telego/telegoutil"
 )
 
 func main() {
-	botToken := os.Getenv("BOT_TOKEN")
-	bot, err := telego.NewBot(botToken, telego.WithDefaultDebugLogger())
+	tokens, err := ParseToken()
+	bot, err := telego.NewBot(tokens.TelegramBotToken, telego.WithDefaultDebugLogger())
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	updates, _ := bot.UpdatesViaLongPolling(nil)
-	defer bot.StopLongPolling()
-	// answer1 := BoringMessage()
-	// idChatClestation := int64(-1002396731326)
-	// reply1 := telegoutil.Message(, answer1)
-	// bot.SendMessage(reply1)
-	for update := range updates {
-		if update.Message != nil && update.Message.Text != "" {
-			question := update.Message.Text
-			// answer := Chatgpt(question)
-			// answer := ChatGemini(question)
-			fmt.Println(question, "aaaaaaaaaaaaaaaaaa")
-			// "немене тисе бересңндер"
-			// test := TestGeminiConnection()
-
-			answer := RandomResponse()
-
-			reply := telegoutil.Message(update.Message.Chat.ChatID(), answer)
-
-			bot.SendMessage(reply)
-
-		}
+	updates, err := bot.UpdatesViaLongPolling(nil)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
+	defer bot.StopLongPolling()
+	var IdChatClastation int64
+	IdChatClastation = -1002396731326
+	idChat := telego.ChatID{
+		ID: IdChatClastation,
+	}
+
+	err = SendMesageToChat(bot, idChat)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	// _, err = bot.SendMessage(&telego.SendMessageParams{
+	// 	ChatID: telego.ChatID{ID: -1002396731326},
+	// 	Text:   "Привет, группа! Это тестовое сообщение.",
+	// })
+	// if err != nil {
+	// 	log.Printf("Ошибка отправки сообщения: %v", err)
+	// } else {
+	// 	log.Println("Сообщение успешно отправлено!")
+	// }
+	for update := range updates {
+		if update.Message != nil {
+			log.Printf("Чат ID: %d, Сообщение: %s", update.Message.Chat.ID, update.Message.Text)
+		}
+
+	}
+
 }
 
 func Chatgpt8ff(question string) string {
@@ -257,5 +269,37 @@ func BoringMessage() string {
 		}
 		index := rand.IntN(len(openingLines) - 1)
 		return openingLines[index]
+	}
+}
+
+func ParseToken() (models.Tokens, error) {
+	file, err := os.Open("utils.json")
+	if err != nil {
+		fmt.Println(err)
+		return models.Tokens{}, err
+	}
+	defer file.Close()
+	var tokens models.Tokens
+	err = json.NewDecoder(file).Decode(&tokens)
+	if err != nil {
+		fmt.Println(err)
+		return models.Tokens{}, err
+	}
+
+	return tokens, nil
+}
+
+func SendMesageToChat(bot *telego.Bot, chatId telego.ChatID) error {
+	for {
+		message := RandomResponse()
+		_, err := bot.SendMessage(&telego.SendMessageParams{
+			ChatID: chatId,
+			Text:   message,
+		})
+		if err != nil {
+			return err
+		}
+		time.Sleep(time.Minute * 2)
+
 	}
 }

@@ -5,7 +5,6 @@ go 1.23.3
 require (
 	github.com/8ff/gpt v0.0.0-20240904192016-70eaef7d23d7
 	github.com/mymmrac/telego v0.31.4
-	github.com/openai/openai-go v0.1.0-alpha.38
 )
 
 require (
@@ -19,10 +18,6 @@ require (
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/savsgio/gotils v0.0.0-20240704082632-aef3928b8a38 // indirect
-	github.com/tidwall/gjson v1.14.4 // indirect
-	github.com/tidwall/match v1.1.1 // indirect
-	github.com/tidwall/pretty v1.2.1 // indirect
-	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.57.0 // indirect
