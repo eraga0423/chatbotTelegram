@@ -47,9 +47,8 @@ func main() {
 }
 
 func Chatgpt8ff(question string) string {
-	gtp := os.Getenv("TOKEN_GPT")
+
 	api, err := gpt.Init(gpt.Params{
-		API_TOKEN:    gtp,
 		StripNewline: true,
 		Request: gpt.ChatRequest{
 			Model: "gpt-3.5-turbo",
