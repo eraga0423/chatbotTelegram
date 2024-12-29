@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	botToken := "7261966141:AAGw7-WCqfMpHpkXZEgDNBGvX-bjN7JdpcI"
+	botToken := os.Getenv("BOT_TOKEN")
 	bot, err := telego.NewBot(botToken, telego.WithDefaultDebugLogger())
 	if err != nil {
 		fmt.Println(err)
@@ -24,10 +24,10 @@ func main() {
 	}
 	updates, _ := bot.UpdatesViaLongPolling(nil)
 	defer bot.StopLongPolling()
-	answer1 := BoringMessage()
-	idChatClestation := int64(-1002396731326)
-	reply1 := telegoutil.Message(idChatClestation, answer1)
-	bot.SendMessage(reply1)
+	// answer1 := BoringMessage()
+	// idChatClestation := int64(-1002396731326)
+	// reply1 := telegoutil.Message(, answer1)
+	// bot.SendMessage(reply1)
 	for update := range updates {
 		if update.Message != nil && update.Message.Text != "" {
 			question := update.Message.Text
@@ -46,9 +46,8 @@ func main() {
 	}
 }
 
-var TokenGPT = "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"
-
 func Chatgpt8ff(question string) string {
+	TokenGPT := os.Getenv("TOKEN_GPT")
 	api, err := gpt.Init(gpt.Params{
 		API_TOKEN:    TokenGPT,
 		StripNewline: true,
@@ -95,6 +94,7 @@ func ChatGemini(questions string) string {
 	res = string(res1)
 	return res
 }
+
 func TestGeminiConnection() string {
 	conn, err := net.Dial("tcp", "gemini.circumlunar.space:1965")
 	if err != nil {
